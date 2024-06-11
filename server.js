@@ -55,7 +55,7 @@ function sendCommandToMinecraftServer(command) {
 }
 
 const wss = new WebSocket.Server({ port: port });
-console.log("WebSocket server started successfully on port 8081.");
+console.log("WebSocket server started successfully on port ", port ");
 
 const clients = new Set();
 
