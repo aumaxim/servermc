@@ -1,7 +1,7 @@
-import WebSocket from "ws";
-import { spawn } from "child_process";
-import chalk from "chalk";
-import stripAnsi from "strip-ansi";
+const WebSocket = require("ws");
+const { spawn } = require("child_process");
+const chalk = require("chalk");
+const stripAnsi = require('strip-ansi');
 
 let minecraftServer = null;
 const args = process.argv.slice(2);
@@ -96,10 +96,9 @@ wss.on("connection", (ws) => {
 });
 
 function broadcastToClients(message) {
-  const cleanMessage = stripAnsi(message);
   for (const client of clients) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(cleanMessage);
+      client.send(message);
     }
   }
 }
@@ -107,12 +106,12 @@ function broadcastToClients(message) {
 function handleMinecraftLog(message, type) {
   let formattedMessage;
   if (type === "stdout") {
-    formattedMessage = chalk.green(`STDOUT: ${message.trim()}`);
+    formattedMessage = `<span style="color: green;">STDOUT: ${stripAnsi(message.trim())}</span>`;
   } else {
-    formattedMessage = chalk.red(`STDERR: ${message.trim()}`);
+    formattedMessage = `<span style="color: red;">STDERR: ${stripAnsi(message.trim())}</span>`;
   }
 
-  console.log(formattedMessage);
+  console.log(stripAnsi(formattedMessage));
   broadcastToClients(formattedMessage);
 }
 
