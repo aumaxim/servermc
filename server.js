@@ -1,5 +1,6 @@
 const WebSocket = require("ws");
 const { spawn } = require("child_process");
+const chalk = require("chalk");
 
 let minecraftServer = null;
 const args = process.argv.slice(2);
@@ -25,13 +26,11 @@ function startMinecraftServer() {
   ]);
 
   minecraftServer.stdout.on("data", (data) => {
-    console.log(`STDOUT: ${data.toString()}`);
-    broadcastToClients(data.toString());
+    handleMinecraftLog(data.toString(), "stdout");
   });
 
   minecraftServer.stderr.on("data", (data) => {
-    console.error(`STDERR: ${data.toString()}`);
-    broadcastToClients(data.toString());
+    handleMinecraftLog(data.toString(), "stderr");
   });
 
   minecraftServer.on("close", (code, signal) => {
@@ -55,7 +54,7 @@ function sendCommandToMinecraftServer(command) {
 }
 
 const wss = new WebSocket.Server({ port: port });
-console.log("WebSocket server started successfully on port ", port ");
+console.log(`WebSocket server started successfully on port ${port}.`);
 
 const clients = new Set();
 
@@ -101,6 +100,18 @@ function broadcastToClients(message) {
       client.send(message);
     }
   }
+}
+
+function handleMinecraftLog(message, type) {
+  let formattedMessage;
+  if (type === "stdout") {
+    formattedMessage = chalk.green(`STDOUT: ${message.trim()}`);
+  } else {
+    formattedMessage = chalk.red(`STDERR: ${message.trim()}`);
+  }
+
+  console.log(formattedMessage);
+  broadcastToClients(formattedMessage);
 }
 
 function shutdown() {
