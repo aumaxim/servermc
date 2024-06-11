@@ -1,12 +1,17 @@
 const WebSocket = require("ws");
 const { spawn } = require("child_process");
 const chalk = require("chalk");
-const stripAnsi = require('strip-ansi');
+
+let stripAnsi; // Déclaration de la variable pour stripAnsi
 
 let minecraftServer = null;
 const args = process.argv.slice(2);
 const port = args[0] || 8080;
 const portmc = port - 8080 + 25565;
+
+async function loadStripAnsi() {
+  stripAnsi = (await import('strip-ansi')).default;
+}
 
 function startMinecraftServer() {
   if (minecraftServer) {
@@ -103,7 +108,11 @@ function broadcastToClients(message) {
   }
 }
 
-function handleMinecraftLog(message, type) {
+async function handleMinecraftLog(message, type) {
+  if (!stripAnsi) {
+    await loadStripAnsi();
+  }
+
   let formattedMessage;
   if (type === "stdout") {
     formattedMessage = `<span style="color: green;">STDOUT: ${stripAnsi(message.trim())}</span>`;
