@@ -1,6 +1,7 @@
-const WebSocket = require("ws");
-const { spawn } = require("child_process");
-const chalk = require("chalk");
+import WebSocket from "ws";
+import { spawn } from "child_process";
+import chalk from "chalk";
+import stripAnsi from "strip-ansi";
 
 let minecraftServer = null;
 const args = process.argv.slice(2);
@@ -95,9 +96,10 @@ wss.on("connection", (ws) => {
 });
 
 function broadcastToClients(message) {
+  const cleanMessage = stripAnsi(message);
   for (const client of clients) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+      client.send(cleanMessage);
     }
   }
 }
