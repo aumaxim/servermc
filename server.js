@@ -1,15 +1,18 @@
 const WebSocket = require("ws");
 const { spawn } = require("child_process");
 
-let minecraftServer = null; // Variable to store the Minecraft server process
+let minecraftServer = null;
 const args = process.argv.slice(2);
-const host = args[0] || "0.0.0.0"; // Utiliser '0.0.0.0' par défaut si aucun hôte n'est spécifié
-// Function to start the Minecraft server
+const port = args[0] || 8080;
+const portmc = port - 8080 + 25565;
+
 function startMinecraftServer() {
   if (minecraftServer) {
     console.log("Server is already running.");
     return;
   }
+
+  console.log("Starting Minecraft server...");
 
   minecraftServer = spawn("java", [
     "-Xmx1024M",
@@ -17,13 +20,17 @@ function startMinecraftServer() {
     "-jar",
     "server.jar",
     "nogui",
+    "--port",
+    portmc,
   ]);
 
   minecraftServer.stdout.on("data", (data) => {
+    console.log(`STDOUT: ${data.toString()}`);
     broadcastToClients(data.toString());
   });
 
   minecraftServer.stderr.on("data", (data) => {
+    console.error(`STDERR: ${data.toString()}`);
     broadcastToClients(data.toString());
   });
 
@@ -31,7 +38,7 @@ function startMinecraftServer() {
     console.log(
       `Minecraft server closed with code ${code} and signal ${signal}.`
     );
-    minecraftServer = null; // Reset the variable when the server closes
+    minecraftServer = null;
   });
 
   minecraftServer.on("error", (error) => {
@@ -39,7 +46,6 @@ function startMinecraftServer() {
   });
 }
 
-// Function to send a command to the Minecraft server
 function sendCommandToMinecraftServer(command) {
   if (minecraftServer) {
     minecraftServer.stdin.write(command + "\n");
@@ -48,8 +54,8 @@ function sendCommandToMinecraftServer(command) {
   }
 }
 
-const wss = new WebSocket.Server({ port: 8081, host });
-console.log("WebSocket server started successfully on port 8080.");
+const wss = new WebSocket.Server({ port: port });
+console.log("WebSocket server started successfully on port 8081.");
 
 const clients = new Set();
 
@@ -74,8 +80,8 @@ wss.on("connection", (ws) => {
         ws.send("Server is already running.");
       }
     } else {
-      sendCommandToMinecraftServer(command);
       console.log(`Received command from client: ${command}`);
+      sendCommandToMinecraftServer(command);
     }
   });
 
@@ -97,7 +103,6 @@ function broadcastToClients(message) {
   }
 }
 
-// Graceful shutdown
 function shutdown() {
   console.log("Shutting down server...");
   if (minecraftServer) {
@@ -112,5 +117,4 @@ function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-// Start the Minecraft server on startup
 startMinecraftServer();
