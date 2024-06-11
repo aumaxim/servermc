@@ -10,7 +10,7 @@ const port = args[0] || 8080;
 const portmc = port - 8080 + 25565;
 
 async function loadStripAnsi() {
-  stripAnsi = (await import('strip-ansi')).default;
+  stripAnsi = (await import("strip-ansi")).default;
 }
 
 function startMinecraftServer() {
@@ -115,9 +115,9 @@ async function handleMinecraftLog(message, type) {
 
   let formattedMessage;
   if (type === "stdout") {
-    formattedMessage = `<span style="color: green;">STDOUT: ${stripAnsi(message.trim())}</span>`;
+    formattedMessage = `STDOUT: ${stripAnsi(message.trim())}`;
   } else {
-    formattedMessage = `<span style="color: red;">STDERR: ${stripAnsi(message.trim())}</span>`;
+    formattedMessage = `STDERR: ${stripAnsi(message.trim())}`;
   }
 
   console.log(stripAnsi(formattedMessage));
